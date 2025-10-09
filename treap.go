@@ -178,6 +178,14 @@ func (t *Treap[T]) FindUpperBound(value T) (node *Node[T], index int) {
 
 // At returns the node located at the provided index or nil if it is out of range.
 func (t *Treap[T]) At(index int) *Node[T] {
+	sz := t.root.safeSize()
+	if sz == 0 || index < -sz || index >= sz {
+		return nil
+	}
+	if index < 0 {
+		index = sz + index
+	}
+
 	node, _ := t.root.lookupLeftmostUnmatch(t.condCutN(index), 0)
 	return node
 }

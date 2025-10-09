@@ -159,10 +159,29 @@ func TestBoundsAndLookupEdgeCases(t *testing.T) {
 	require.Equal(t, 0, idx)
 
 	require.Nil(t, tr.At(10))
+	require.Nil(t, tr.At(-10))
+	require.Nil(t, tr.At(3))
+	require.Nil(t, tr.At(-4))
+
+	node = tr.At(-3)
+	require.NotNil(t, node)
+	require.Equal(t, 1, node.value)
 
 	node = tr.At(-1)
 	require.NotNil(t, node)
+	require.Equal(t, 5, node.value)
+
+	node = tr.At(0)
+	require.NotNil(t, node)
 	require.Equal(t, 1, node.value)
+
+	node = tr.At(1)
+	require.NotNil(t, node)
+	require.Equal(t, 3, node.value)
+
+	node = tr.At(2)
+	require.NotNil(t, node)
+	require.Equal(t, 5, node.value)
 }
 
 func TestSizeEmptyClear(t *testing.T) {
