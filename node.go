@@ -1,4 +1,4 @@
-package util
+package gotreap
 
 type leftCondition[T any] func(nodeValue T, nodeIndex int) bool
 
