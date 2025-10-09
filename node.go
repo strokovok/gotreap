@@ -1,7 +1,5 @@
 package util
 
-import "math/rand/v2"
-
 type leftCondition[T any] func(nodeValue T, nodeIndex int) bool
 
 type Node[T any] struct {
@@ -14,10 +12,10 @@ type Node[T any] struct {
 }
 
 // newNode creates a new treap node containing value with a random heap priority.
-func newNode[T any](value T) *Node[T] {
+func newNode[T any](value T, heightPriority int) *Node[T] {
 	return &Node[T]{
 		value:          value,
-		heightPriority: rand.Int(),
+		heightPriority: heightPriority,
 		left:           nil,
 		right:          nil,
 		parent:         nil,
