@@ -2,18 +2,36 @@ package util
 
 import (
 	"cmp"
+	"math/rand/v2"
 	"sort"
 )
 
 type Treap[T any] struct {
 	lessFn func(a T, b T) bool
+	randFn func() int
 	root   *Node[T]
+}
+
+// NewAutoOrderTreap builds an ordered treap using the natural ordering for type T.
+func NewAutoOrderTreap[T cmp.Ordered](values ...T) *Treap[T] {
+	return NewTreap(cmp.Less[T], values...)
+}
+
+// NewAutoOrderTreap builds an ordered treap using the natural ordering for type T.
+func NewAutoOrderTreapWithRand[T cmp.Ordered](randFn func() int, values ...T) *Treap[T] {
+	return NewTreapWithRand(cmp.Less[T], randFn, values...)
 }
 
 // NewTreap constructs a treap using lessFn for ordering and optionally inserts values.
 func NewTreap[T any](lessFn func(a T, b T) bool, values ...T) *Treap[T] {
+	return NewTreapWithRand(lessFn, rand.Int, values...)
+}
+
+// NewTreap constructs a treap using lessFn for ordering, randFn for tree balancing, and optionally inserts values.
+func NewTreapWithRand[T any](lessFn func(a T, b T) bool, randFn func() int, values ...T) *Treap[T] {
 	t := &Treap[T]{
 		lessFn: lessFn,
+		randFn: randFn,
 		root:   nil,
 	}
 
@@ -22,15 +40,10 @@ func NewTreap[T any](lessFn func(a T, b T) bool, values ...T) *Treap[T] {
 	})
 
 	for _, val := range values {
-		t.root = merge(t.root, newNode(val))
+		t.root = merge(t.root, newNode(val, randFn()))
 	}
 
 	return t
-}
-
-// NewAutoOrderTreap builds an ordered treap using the natural ordering for type T.
-func NewAutoOrderTreap[T cmp.Ordered](values ...T) *Treap[T] {
-	return NewTreap(cmp.Less[T], values...)
 }
 
 // condLess returns a predicate that is true for nodes whose value is less than value.
@@ -60,7 +73,7 @@ func (t *Treap[T]) InsertLeft(value T) (index int) {
 
 	index = less.safeSize()
 
-	greaterOrEqual = merge(newNode(value), greaterOrEqual)
+	greaterOrEqual = merge(newNode(value, t.randFn()), greaterOrEqual)
 	t.root = merge(less, greaterOrEqual)
 
 	return index
@@ -72,7 +85,7 @@ func (t *Treap[T]) InsertRight(value T) (index int) {
 
 	index = lessOrEqual.safeSize()
 
-	lessOrEqual = merge(lessOrEqual, newNode(value))
+	lessOrEqual = merge(lessOrEqual, newNode(value, t.randFn()))
 	t.root = merge(lessOrEqual, greater)
 
 	return index
@@ -246,11 +259,13 @@ func (t *Treap[T]) split(leftCond leftCondition[T]) (left *Treap[T], right *Trea
 
 	left = &Treap[T]{
 		lessFn: t.lessFn,
+		randFn: t.randFn,
 		root:   less,
 	}
 
 	right = &Treap[T]{
 		lessFn: t.lessFn,
+		randFn: t.randFn,
 		root:   greaterOrEqual,
 	}
 
@@ -318,8 +333,16 @@ func (t *Treap[T]) Count(val T) int {
 
 // Merge joins two treaps that share the same ordering function.
 func Merge[T any](left *Treap[T], right *Treap[T]) *Treap[T] {
+	if left == nil {
+		return right
+	}
+	if right == nil {
+		return left
+	}
+
 	return &Treap[T]{
 		lessFn: left.lessFn,
+		randFn: left.randFn,
 		root:   merge(left.root, right.root),
 	}
 }
