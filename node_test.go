@@ -103,13 +103,13 @@ func TestNodeSafeSetParentCanClearParent(t *testing.T) {
 
 func TestMergeMaintainsHeapAndOrder(t *testing.T) {
 	// Construct a left-heavy tree and right-heavy tree to stress parent updates.
-	left := mustNode(2, 30,
-		mustNode(1, 40, nil, nil),
-		mustNode(3, 35, nil, nil),
+	left := mustNode(2, 40,
+		mustNode(1, 35, nil, nil),
+		mustNode(3, 30, nil, nil),
 	)
-	right := mustNode(6, 20,
-		mustNode(5, 25, nil, nil),
-		mustNode(7, 15, nil, nil),
+	right := mustNode(6, 25,
+		mustNode(5, 15, nil, nil),
+		mustNode(7, 20, nil, nil),
 	)
 
 	merged := merge(left, right)
@@ -131,8 +131,8 @@ func TestMergeMaintainsHeapAndOrder(t *testing.T) {
 func TestMergeHandlesNilSubtrees(t *testing.T) {
 	leaf := mustNode(1, 10, nil, nil)
 
-	require.Same(t, leaf, merge[int](nil, leaf))
-	require.Same(t, leaf, merge[int](leaf, nil))
+	require.Same(t, leaf, merge(nil, leaf))
+	require.Same(t, leaf, merge(leaf, nil))
 
 	left := mustNode(1, 20, nil, nil)
 	right := mustNode(2, 10, nil, nil)
@@ -145,13 +145,13 @@ func TestMergeHandlesNilSubtrees(t *testing.T) {
 }
 
 func TestSplitProducesExpectedPartitions(t *testing.T) {
-	root := mustNode(4, 100,
+	root := mustNode(4, 150,
 		mustNode(2, 120,
-			mustNode(1, 150, nil, nil),
+			mustNode(1, 100, nil, nil),
 			mustNode(3, 110, nil, nil),
 		),
-		mustNode(6, 80,
-			mustNode(5, 90, nil, nil),
+		mustNode(6, 90,
+			mustNode(5, 80, nil, nil),
 			mustNode(7, 70, nil, nil),
 		),
 	)
@@ -167,8 +167,8 @@ func TestSplitProducesExpectedPartitions(t *testing.T) {
 }
 
 func TestSplitEntireTreeGoesOneSide(t *testing.T) {
-	root := mustNode(2, 50,
-		mustNode(1, 60, nil, nil),
+	root := mustNode(2, 60,
+		mustNode(1, 50, nil, nil),
 		mustNode(3, 40, nil, nil),
 	)
 
@@ -184,13 +184,13 @@ func TestSplitEntireTreeGoesOneSide(t *testing.T) {
 }
 
 func TestSplitHonorsIndexOffset(t *testing.T) {
-	root := mustNode(3, 90,
+	root := mustNode(3, 110,
 		mustNode(2, 100,
-			mustNode(1, 110, nil, nil),
+			mustNode(1, 90, nil, nil),
 			nil,
 		),
-		mustNode(5, 80,
-			mustNode(4, 85, nil, nil),
+		mustNode(5, 85,
+			mustNode(4, 80, nil, nil),
 			mustNode(6, 70, nil, nil),
 		),
 	)
@@ -205,8 +205,8 @@ func TestSplitHonorsIndexOffset(t *testing.T) {
 }
 
 func TestPrevAndNext(t *testing.T) {
-	root := mustNode(2, 100,
-		mustNode(1, 200, nil, nil),
+	root := mustNode(2, 200,
+		mustNode(1, 100, nil, nil),
 		mustNode(3, 150, nil, nil),
 	)
 
@@ -217,16 +217,16 @@ func TestPrevAndNext(t *testing.T) {
 }
 
 func TestPrevAndNextAcrossAncestors(t *testing.T) {
-	root := mustNode(10, 100,
-		mustNode(5, 120,
-			mustNode(2, 150, nil, nil),
-			mustNode(7, 110,
-				mustNode(6, 130, nil, nil),
+	root := mustNode(10, 150,
+		mustNode(5, 130,
+			mustNode(2, 100, nil, nil),
+			mustNode(7, 120,
+				mustNode(6, 110, nil, nil),
 				mustNode(8, 90, nil, nil),
 			),
 		),
-		mustNode(15, 80,
-			mustNode(12, 95, nil, nil),
+		mustNode(15, 95,
+			mustNode(12, 80, nil, nil),
 			mustNode(20, 70, nil, nil),
 		),
 	)
@@ -245,13 +245,13 @@ func TestPrevAndNextAcrossAncestors(t *testing.T) {
 }
 
 func TestLeftmostRightmost(t *testing.T) {
-	root := mustNode(3, 50,
+	root := mustNode(3, 70,
 		mustNode(2, 60,
-			mustNode(1, 70, nil, nil),
+			mustNode(1, 50, nil, nil),
 			nil,
 		),
-		mustNode(5, 40,
-			mustNode(4, 45, nil, nil),
+		mustNode(5, 45,
+			mustNode(4, 40, nil, nil),
 			mustNode(6, 35, nil, nil),
 		),
 	)
@@ -260,13 +260,13 @@ func TestLeftmostRightmost(t *testing.T) {
 }
 
 func TestIndexAndValue(t *testing.T) {
-	root := mustNode(3, 90,
+	root := mustNode(3, 110,
 		mustNode(2, 100,
-			mustNode(1, 110, nil, nil),
+			mustNode(1, 90, nil, nil),
 			nil,
 		),
-		mustNode(5, 80,
-			mustNode(4, 85, nil, nil),
+		mustNode(5, 85,
+			mustNode(4, 80, nil, nil),
 			mustNode(6, 70, nil, nil),
 		),
 	)
@@ -284,13 +284,13 @@ func TestIndexAndValue(t *testing.T) {
 }
 
 func TestLookupHelpers(t *testing.T) {
-	root := mustNode(4, 120,
+	root := mustNode(4, 150,
 		mustNode(2, 140,
-			mustNode(1, 150, nil, nil),
+			mustNode(1, 120, nil, nil),
 			mustNode(3, 130, nil, nil),
 		),
-		mustNode(6, 110,
-			mustNode(5, 115, nil, nil),
+		mustNode(6, 115,
+			mustNode(5, 110, nil, nil),
 			mustNode(7, 105, nil, nil),
 		),
 	)
@@ -311,13 +311,13 @@ func TestLookupHelpers(t *testing.T) {
 }
 
 func TestLookupHelpersWithIndexOffset(t *testing.T) {
-	root := mustNode(3, 90,
+	root := mustNode(3, 120,
 		mustNode(2, 100,
-			mustNode(1, 120, nil, nil),
+			mustNode(1, 90, nil, nil),
 			nil,
 		),
-		mustNode(5, 80,
-			mustNode(4, 95, nil, nil),
+		mustNode(5, 95,
+			mustNode(4, 80, nil, nil),
 			mustNode(6, 70, nil, nil),
 		),
 	)
@@ -358,13 +358,13 @@ func TestNilNodeHelpersReturnIdentityValues(t *testing.T) {
 }
 
 func TestSplitDetachesParentsAcrossPartitions(t *testing.T) {
-	root := mustNode(10, 50,
+	root := mustNode(10, 90,
 		mustNode(5, 70,
-			mustNode(2, 90, nil, nil),
+			mustNode(2, 50, nil, nil),
 			mustNode(8, 60, nil, nil),
 		),
-		mustNode(15, 40,
-			mustNode(12, 55, nil, nil),
+		mustNode(15, 55,
+			mustNode(12, 40, nil, nil),
 			mustNode(18, 35, nil, nil),
 		),
 	)
