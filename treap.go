@@ -331,6 +331,14 @@ func (t *Treap[T]) Count(val T) int {
 	return t.CountRange(val, true, val, true)
 }
 
+// Returns root element of the tree.
+// If tree is empty - nil will be returned.
+// It's not guaranteed which element it will be order-wise.
+// Useful when you need to just get any element.
+func (t *Treap[T]) Root() *Node[T] {
+	return t.root
+}
+
 // Merge joins two treaps that share the same ordering function.
 func Merge[T any](left *Treap[T], right *Treap[T]) *Treap[T] {
 	if left == nil {
