@@ -1,13 +1,14 @@
 package gotreap
 
 import (
+	"math/rand/v2"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
-func fakeRand() int {
-	return 1
+func staticRand() func() int {
+	return rand.New(rand.NewPCG(528, 491)).Int
 }
 
 // mustValues returns a sorted slice of all values stored in the treap.
@@ -35,7 +36,7 @@ func requireTreapValues[T any](t *testing.T, tr *Treap[T], expected ...T) {
 }
 
 func TestNewTreapAndInsertions(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 5, 1, 3, 5)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 5, 1, 3, 5)
 	requireTreapValues(t, tr, 1, 3, 5, 5)
 
 	idx := tr.InsertLeft(5)
@@ -48,7 +49,7 @@ func TestNewTreapAndInsertions(t *testing.T) {
 
 func TestNewTreapCustomLess(t *testing.T) {
 	reverse := func(a, b int) bool { return a > b }
-	tr := NewTreapWithRand(reverse, fakeRand, 1, 2, 3, 4)
+	tr := NewTreapWithRand(reverse, staticRand(), 1, 2, 3, 4)
 
 	requireTreapValues(t, tr, 4, 3, 2, 1)
 
@@ -59,7 +60,7 @@ func TestNewTreapCustomLess(t *testing.T) {
 }
 
 func TestEraseVariants(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 1, 2, 2, 2, 3, 3, 4)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 1, 2, 2, 2, 3, 3, 4)
 
 	require.Equal(t, 2, tr.EraseAll(3))
 	requireTreapValues(t, tr, 1, 2, 2, 2, 4)
@@ -72,7 +73,7 @@ func TestEraseVariants(t *testing.T) {
 }
 
 func TestEraseRangeAndPanics(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 1, 2, 3, 4, 5)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 1, 2, 3, 4, 5)
 
 	require.Equal(t, 2, tr.EraseRange(2, true, 4, false))
 	requireTreapValues(t, tr, 1, 4, 5)
@@ -87,7 +88,7 @@ func TestEraseRangeAndPanics(t *testing.T) {
 }
 
 func TestEraseRangeExclusiveAndOutOfBounds(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 1, 2, 3, 4, 5, 6, 7)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 1, 2, 3, 4, 5, 6, 7)
 
 	require.Equal(t, 3, tr.EraseRange(2, false, 6, false))
 
@@ -97,7 +98,7 @@ func TestEraseRangeExclusiveAndOutOfBounds(t *testing.T) {
 }
 
 func TestEraseLeftmostZeroCount(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 1, 1, 1, 2, 2)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 1, 1, 1, 2, 2)
 
 	require.Equal(t, 0, tr.EraseLeftmost(1, 0))
 	requireTreapValues(t, tr, 1, 1, 1, 2, 2)
@@ -107,7 +108,7 @@ func TestEraseLeftmostZeroCount(t *testing.T) {
 }
 
 func TestEraseRightmostNegativeRemovesAll(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 3, 3, 3, 4, 5)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 3, 3, 3, 4, 5)
 
 	require.Equal(t, 3, tr.EraseRightmost(3, -1))
 	requireTreapValues(t, tr, 4, 5)
@@ -117,7 +118,7 @@ func TestEraseRightmostNegativeRemovesAll(t *testing.T) {
 }
 
 func TestEraseAt(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 1, 2, 3, 4, 5)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 1, 2, 3, 4, 5)
 	require.Equal(t, 3, tr.EraseAt(1, 3))
 	requireTreapValues(t, tr, 1, 5)
 	require.Panics(t, func() { tr.EraseAt(-1, 1) })
@@ -125,7 +126,7 @@ func TestEraseAt(t *testing.T) {
 }
 
 func TestEraseAtZeroOrExcessCount(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 1, 2, 3, 4)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 1, 2, 3, 4)
 	require.Equal(t, 0, tr.EraseAt(2, 0))
 
 	require.Equal(t, 3, tr.EraseAt(1, 10))
@@ -134,7 +135,7 @@ func TestEraseAtZeroOrExcessCount(t *testing.T) {
 }
 
 func TestBoundsAndLookup(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 1, 2, 2, 3, 4, 5)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 1, 2, 2, 3, 4, 5)
 
 	node, idx := tr.FindLowerBound(2)
 	require.NotNil(t, node)
@@ -151,7 +152,7 @@ func TestBoundsAndLookup(t *testing.T) {
 }
 
 func TestBoundsAndLookupEdgeCases(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 1, 3, 5)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 1, 3, 5)
 
 	node, idx := tr.FindLowerBound(6)
 	require.Nil(t, node)
@@ -188,7 +189,7 @@ func TestBoundsAndLookupEdgeCases(t *testing.T) {
 }
 
 func TestSizeEmptyClear(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand[int](fakeRand)
+	tr := NewAutoOrderTreapWithRand[int](staticRand())
 	require.True(t, tr.Empty())
 	require.Zero(t, tr.Size())
 	tr.InsertRight(1)
@@ -200,7 +201,7 @@ func TestSizeEmptyClear(t *testing.T) {
 }
 
 func TestClearAllowsReuse(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 5, 6, 7)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 5, 6, 7)
 	tr.Clear()
 	require.True(t, tr.Empty())
 
@@ -211,7 +212,7 @@ func TestClearAllowsReuse(t *testing.T) {
 }
 
 func TestExtremaAndPops(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 3, 1, 4, 1, 5)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 3, 1, 4, 1, 5)
 	require.Equal(t, 1, tr.Leftmost().value)
 	require.Equal(t, 5, tr.Rightmost().value)
 
@@ -222,7 +223,7 @@ func TestExtremaAndPops(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, 5, val)
 
-	empty := NewAutoOrderTreapWithRand[int](fakeRand)
+	empty := NewAutoOrderTreapWithRand[int](staticRand())
 	_, ok = empty.PopLeftmost()
 	require.False(t, ok)
 	_, ok = empty.PopRightmost()
@@ -230,7 +231,7 @@ func TestExtremaAndPops(t *testing.T) {
 }
 
 func TestExtremaAndPopsOnSingleton(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 42)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 42)
 
 	node := tr.Leftmost()
 	require.NotNil(t, node)
@@ -248,7 +249,7 @@ func TestExtremaAndPopsOnSingleton(t *testing.T) {
 }
 
 func TestPopUntilEmptyMaintainsOrder(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 4, 1, 3, 2)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 4, 1, 3, 2)
 
 	var popped []int
 	for !tr.Empty() {
@@ -265,47 +266,47 @@ func TestPopUntilEmptyMaintainsOrder(t *testing.T) {
 }
 
 func TestSplitVariants(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 1, 2, 3, 4, 5)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 1, 2, 3, 4, 5)
 
 	left, right := tr.SplitBefore(3)
 	requireTreapValues(t, left, 1, 2)
 	requireTreapValues(t, right, 3, 4, 5)
 
-	tr = NewAutoOrderTreapWithRand(fakeRand, 1, 2, 3, 4, 5)
+	tr = NewAutoOrderTreapWithRand(staticRand(), 1, 2, 3, 4, 5)
 	left, right = tr.SplitAfter(3)
 	requireTreapValues(t, left, 1, 2, 3)
 	requireTreapValues(t, right, 4, 5)
 
-	tr = NewAutoOrderTreapWithRand(fakeRand, 1, 2, 3, 4, 5)
+	tr = NewAutoOrderTreapWithRand(staticRand(), 1, 2, 3, 4, 5)
 	left, right = tr.Cut(3)
 	requireTreapValues(t, left, 1, 2, 3)
 	requireTreapValues(t, right, 4, 5)
 }
 
 func TestSplitBeforeAndAfterBoundaries(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 2, 4, 6)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 2, 4, 6)
 	left, right := tr.SplitBefore(1)
 	require.True(t, left.Empty())
 	requireTreapValues(t, right, 2, 4, 6)
 
-	tr = NewAutoOrderTreapWithRand(fakeRand, 2, 4, 6)
+	tr = NewAutoOrderTreapWithRand(staticRand(), 2, 4, 6)
 	left, right = tr.SplitBefore(10)
 	requireTreapValues(t, left, 2, 4, 6)
 	require.True(t, right.Empty())
 
-	tr = NewAutoOrderTreapWithRand(fakeRand, 2, 4, 6)
+	tr = NewAutoOrderTreapWithRand(staticRand(), 2, 4, 6)
 	left, right = tr.SplitAfter(1)
 	require.True(t, left.Empty())
 	requireTreapValues(t, right, 2, 4, 6)
 
-	tr = NewAutoOrderTreapWithRand(fakeRand, 2, 4, 6)
+	tr = NewAutoOrderTreapWithRand(staticRand(), 2, 4, 6)
 	left, right = tr.SplitAfter(10)
 	requireTreapValues(t, left, 2, 4, 6)
 	require.True(t, right.Empty())
 }
 
 func TestSplitClearsOriginal(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 1, 2, 3, 4)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 1, 2, 3, 4)
 	left, right := tr.SplitBefore(3)
 
 	require.True(t, tr.Empty())
@@ -317,20 +318,20 @@ func TestSplitClearsOriginal(t *testing.T) {
 }
 
 func TestSplitWithDuplicateBoundaries(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 1, 2, 2, 2, 3, 4)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 1, 2, 2, 2, 3, 4)
 
 	left, right := tr.SplitBefore(2)
 	requireTreapValues(t, left, 1)
 	requireTreapValues(t, right, 2, 2, 2, 3, 4)
 
-	tr = NewAutoOrderTreapWithRand(fakeRand, 1, 2, 2, 2, 3, 4)
+	tr = NewAutoOrderTreapWithRand(staticRand(), 1, 2, 2, 2, 3, 4)
 	left, right = tr.SplitAfter(2)
 	requireTreapValues(t, left, 1, 2, 2, 2)
 	requireTreapValues(t, right, 3, 4)
 }
 
 func TestCountRangeAndCount(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 1, 2, 2, 3, 4, 4, 5)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 1, 2, 2, 3, 4, 4, 5)
 
 	require.Equal(t, 5, tr.CountRange(2, true, 4, true))
 	require.Equal(t, 1, tr.CountRange(2, false, 4, false))
@@ -344,7 +345,7 @@ func TestCountRangeAndCount(t *testing.T) {
 }
 
 func TestCountRangeOutsideBounds(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 5, 10, 15)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 5, 10, 15)
 
 	require.Zero(t, tr.CountRange(-10, true, 0, true))
 	require.Zero(t, tr.CountRange(20, true, 30, true))
@@ -352,7 +353,7 @@ func TestCountRangeOutsideBounds(t *testing.T) {
 }
 
 func TestCountRangeExclusiveEliminatesBoundaries(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 1, 2, 3, 4)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 1, 2, 3, 4)
 
 	require.Equal(t, 0, tr.CountRange(1, false, 2, false))
 	require.Equal(t, 3, tr.CountRange(1, false, 4, true))
@@ -360,25 +361,25 @@ func TestCountRangeExclusiveEliminatesBoundaries(t *testing.T) {
 }
 
 func TestCutEdgeCounts(t *testing.T) {
-	tr := NewAutoOrderTreapWithRand(fakeRand, 1, 2, 3)
+	tr := NewAutoOrderTreapWithRand(staticRand(), 1, 2, 3)
 	left, right := tr.Cut(0)
 	require.True(t, left.Empty())
 	requireTreapValues(t, right, 1, 2, 3)
 
-	tr = NewAutoOrderTreapWithRand(fakeRand, 1, 2, 3)
+	tr = NewAutoOrderTreapWithRand(staticRand(), 1, 2, 3)
 	left, right = tr.Cut(10)
 	requireTreapValues(t, left, 1, 2, 3)
 	require.True(t, right.Empty())
 
-	tr = NewAutoOrderTreapWithRand(fakeRand, 1, 2, 3)
+	tr = NewAutoOrderTreapWithRand(staticRand(), 1, 2, 3)
 	left, right = tr.Cut(-5)
 	require.True(t, left.Empty())
 	requireTreapValues(t, right, 1, 2, 3)
 }
 
 func TestMergeTreap(t *testing.T) {
-	left := NewAutoOrderTreapWithRand(fakeRand, 1, 2, 3)
-	right := NewAutoOrderTreapWithRand(fakeRand, 4, 5, 6)
+	left := NewAutoOrderTreapWithRand(staticRand(), 1, 2, 3)
+	right := NewAutoOrderTreapWithRand(staticRand(), 4, 5, 6)
 	merged := Merge(left, right)
 
 	requireTreapValues(t, merged, 1, 2, 3, 4, 5, 6)
@@ -388,8 +389,8 @@ func TestMergeTreap(t *testing.T) {
 }
 
 func TestMergeTreapSupportsFurtherInsertion(t *testing.T) {
-	left := NewAutoOrderTreapWithRand(fakeRand, 1, 3)
-	right := NewAutoOrderTreapWithRand(fakeRand, 5, 7)
+	left := NewAutoOrderTreapWithRand(staticRand(), 1, 3)
+	right := NewAutoOrderTreapWithRand(staticRand(), 5, 7)
 
 	merged := Merge(left, right)
 	idx := merged.InsertRight(4)
@@ -401,8 +402,8 @@ func TestMergeTreapSupportsFurtherInsertion(t *testing.T) {
 }
 
 func TestMergeTreapWithEmpty(t *testing.T) {
-	left := NewAutoOrderTreapWithRand(fakeRand, 1, 2, 3)
-	empty := NewAutoOrderTreapWithRand[int](fakeRand)
+	left := NewAutoOrderTreapWithRand(staticRand(), 1, 2, 3)
+	empty := NewAutoOrderTreapWithRand[int](staticRand())
 
 	merged := Merge(left, empty)
 	requireTreapValues(t, merged, 1, 2, 3)
