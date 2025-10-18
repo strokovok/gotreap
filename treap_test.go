@@ -2,8 +2,10 @@ package gotreap
 
 import (
 	"math/rand/v2"
+	"slices"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -412,6 +414,43 @@ func TestMergeTreapWithEmpty(t *testing.T) {
 	requireTreapValues(t, merged, 1, 2, 3)
 
 	require.NotNil(t, merged.lessFn)
+}
+
+func TestJumpRight(t *testing.T) {
+	arr := []int{3255, 0, 12}
+	tr := NewAutoOrderTreapWithRand(staticRand(), arr...)
+
+	rnd := rand.New(rand.NewPCG(8800, 5553535))
+	for range 1000 {
+		newValue := rnd.Int()
+		tr.InsertRight(newValue)
+		arr = append(arr, newValue)
+		slices.Sort(arr)
+
+		assert.Equal(t, len(arr), tr.Size())
+
+		pos1 := rnd.IntN(len(arr))
+		node1 := tr.At(pos1)
+		if assert.NotNil(t, node1) {
+			assert.Equal(t, arr[pos1], node1.Value())
+		}
+
+		assert.Same(t, node1, node1.JumpRight(0))
+		assert.Same(t, node1.Next(), node1.JumpRight(1))
+		assert.Same(t, node1.Prev(), node1.JumpRight(-1))
+
+		pos2 := rnd.IntN(len(arr))
+		node2 := node1.JumpRight(pos2 - pos1)
+		assert.Same(t, tr.At(pos2), node2)
+		if assert.NotNil(t, node2) {
+			assert.Equal(t, arr[pos2], node2.value)
+		}
+
+		for _, pos3 := range []int{len(arr) * -10, len(arr) * -1, -10, -1, len(arr), len(arr) + 10, len(arr) * 2, len(arr) * 10} {
+			node3 := node1.JumpRight(pos3 - pos1)
+			assert.Nil(t, node3)
+		}
+	}
 }
 
 // TODO: fuzzing

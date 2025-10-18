@@ -227,3 +227,32 @@ func (t *Node[T]) lookupLeftmostUnmatch(leftCond leftCondition[T], indexOffset i
 	}
 	return t, centralIndexOffset
 }
+
+// JumpRight will return element that is n positions to the right,
+// or -n positions to the left n is negative.
+// If there's no such element, nil will be returned.
+func (t *Node[T]) JumpRight(n int) *Node[T] {
+	if t == nil || n == 0 {
+		return t
+	}
+	if n < 0 && t.left.safeSize() >= -n {
+		return t.left.JumpRight(n + 1 + t.left.right.safeSize())
+	}
+	if n > 0 && t.right.safeSize() >= n {
+		return t.right.JumpRight(n - 1 - t.right.left.safeSize())
+	}
+	if t.parent == nil {
+		return nil
+	}
+	if t.parent.left == t {
+		return t.parent.JumpRight(n - 1 - t.right.safeSize())
+	}
+	return t.parent.JumpRight(n + 1 + t.left.safeSize())
+}
+
+// JumpLeft will return element that is n positions to the left,
+// or -n positions to the right if n is negative.
+// If there's no such element, nil will be returned.
+func (t *Node[T]) JumpLeft(n int) *Node[T] {
+	return t.JumpRight(-n)
+}
