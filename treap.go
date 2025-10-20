@@ -2,6 +2,7 @@ package gotreap
 
 import (
 	"cmp"
+	"iter"
 	"math/rand/v2"
 	"sort"
 )
@@ -337,6 +338,50 @@ func (t *Treap[T]) Count(val T) int {
 // Useful when you need to just get any element.
 func (t *Treap[T]) Root() *Node[T] {
 	return t.root
+}
+
+// Iterate over treap elements (leftmost to rightmost)
+func (t *Treap[T]) Elements() iter.Seq[*Node[T]] {
+	return func(yield func(*Node[T]) bool) {
+		for cur := t.Leftmost(); cur.Valid(); cur = cur.Next() {
+			if !yield(cur) {
+				return
+			}
+		}
+	}
+}
+
+// Iterate over treap elements in reverse order (rightmost to leftmost)
+func (t *Treap[T]) ElementsBackwards() iter.Seq[*Node[T]] {
+	return func(yield func(*Node[T]) bool) {
+		for cur := t.Rightmost(); cur.Valid(); cur = cur.Prev() {
+			if !yield(cur) {
+				return
+			}
+		}
+	}
+}
+
+// Iterate over treap values (leftmost to rightmost)
+func (t *Treap[T]) Values() iter.Seq[T] {
+	return func(yield func(T) bool) {
+		for cur := t.Leftmost(); cur.Valid(); cur = cur.Next() {
+			if !yield(cur.Value()) {
+				return
+			}
+		}
+	}
+}
+
+// Iterate over treap values in reverse order (rightmost to leftmost)
+func (t *Treap[T]) ValuesBackwards() iter.Seq[T] {
+	return func(yield func(T) bool) {
+		for cur := t.Rightmost(); cur.Valid(); cur = cur.Prev() {
+			if !yield(cur.Value()) {
+				return
+			}
+		}
+	}
 }
 
 // Merge joins two treaps that share the same ordering function.
