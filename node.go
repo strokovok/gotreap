@@ -165,9 +165,10 @@ func (t *Node[T]) Rightmost() *Node[T] {
 }
 
 // Index computes the zero-based position of t within an in-order traversal.
+// Returns -1 if t is nil.
 func (t *Node[T]) Index() int {
 	if t == nil {
-		return 0
+		return -1
 	}
 
 	indexOffset := t.left.safeSize()

@@ -49,6 +49,16 @@ func TestNewTreapAndInsertions(t *testing.T) {
 	requireTreapValues(t, tr, 1, 3, 5, 5, 5, 5)
 }
 
+func TestNewTreapPanicsOnNilFunctions(t *testing.T) {
+	require.Panics(t, func() {
+		NewTreapWithRand(nil, staticRand(), 1, 2, 3)
+	})
+
+	require.Panics(t, func() {
+		NewTreapWithRand(func(a, b int) bool { return a < b }, nil, 1, 2, 3)
+	})
+}
+
 func TestNewTreapCustomLess(t *testing.T) {
 	reverse := func(a, b int) bool { return a > b }
 	tr := NewTreapWithRand(reverse, staticRand(), 1, 2, 3, 4)
@@ -123,7 +133,12 @@ func TestEraseAt(t *testing.T) {
 	tr := NewAutoOrderTreapWithRand(staticRand(), 1, 2, 3, 4, 5)
 	require.Equal(t, 3, tr.EraseAt(1, 3))
 	requireTreapValues(t, tr, 1, 5)
-	require.Panics(t, func() { tr.EraseAt(-1, 1) })
+
+	// Negative indexing is now supported
+	require.Equal(t, 1, tr.EraseAt(-1, 1))
+	requireTreapValues(t, tr, 1)
+
+	// But negative count still panics
 	require.Panics(t, func() { tr.EraseAt(0, -1) })
 }
 
@@ -373,6 +388,13 @@ func TestCutEdgeCounts(t *testing.T) {
 	requireTreapValues(t, left, 1, 2, 3)
 	require.True(t, right.Empty())
 
+	// Negative values cut from the end
+	tr = NewAutoOrderTreapWithRand(staticRand(), 1, 2, 3, 4, 5)
+	left, right = tr.Cut(-2)
+	requireTreapValues(t, left, 1, 2, 3)
+	requireTreapValues(t, right, 4, 5)
+
+	// Large negative values put everything to right
 	tr = NewAutoOrderTreapWithRand(staticRand(), 1, 2, 3)
 	left, right = tr.Cut(-5)
 	require.True(t, left.Empty())

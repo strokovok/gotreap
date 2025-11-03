@@ -354,7 +354,7 @@ func TestNilNodeHelpersReturnIdentityValues(t *testing.T) {
 	require.Nil(t, node.Next())
 	require.Nil(t, node.Leftmost())
 	require.Nil(t, node.Rightmost())
-	require.Equal(t, 0, node.Index())
+	require.Equal(t, -1, node.Index())
 }
 
 func TestSplitDetachesParentsAcrossPartitions(t *testing.T) {

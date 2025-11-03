@@ -18,7 +18,7 @@ func NewAutoOrderTreap[T cmp.Ordered](values ...T) *Treap[T] {
 	return NewTreap(cmp.Less[T], values...)
 }
 
-// NewAutoOrderTreap builds an ordered treap using the natural ordering for type T.
+// NewAutoOrderTreapWithRand builds an ordered treap using the natural ordering for type T and a custom random function.
 func NewAutoOrderTreapWithRand[T cmp.Ordered](randFn func() int, values ...T) *Treap[T] {
 	return NewTreapWithRand(cmp.Less[T], randFn, values...)
 }
@@ -28,8 +28,15 @@ func NewTreap[T any](lessFn func(a T, b T) bool, values ...T) *Treap[T] {
 	return NewTreapWithRand(lessFn, rand.Int, values...)
 }
 
-// NewTreap constructs a treap using lessFn for ordering, randFn for tree balancing, and optionally inserts values.
+// NewTreapWithRand constructs a treap using lessFn for ordering, randFn for tree balancing, and optionally inserts values.
 func NewTreapWithRand[T any](lessFn func(a T, b T) bool, randFn func() int, values ...T) *Treap[T] {
+	if lessFn == nil {
+		panic("lessFn must not be nil")
+	}
+	if randFn == nil {
+		panic("randFn must not be nil")
+	}
+
 	t := &Treap[T]{
 		lessFn: lessFn,
 		randFn: randFn,
@@ -138,6 +145,7 @@ func (t *Treap[T]) EraseRightmost(value T, n int) (erasedCount int) {
 
 // EraseRange removes values between startValue and endValue.
 // Each bound is removed only when its corresponding inclusive flag is true, and the method reports how many values were erased.
+// Panics if endValue < startValue, or if startValue == endValue with non-inclusive bounds.
 func (t *Treap[T]) EraseRange(startValue T, inclusiveStart bool, endValue T, inclusiveEnd bool) (erasedCount int) {
 	if t.lessFn(endValue, startValue) {
 		panic("provided endValue must not be lower than startValue")
@@ -166,9 +174,26 @@ func (t *Treap[T]) EraseRange(startValue T, inclusiveStart bool, endValue T, inc
 }
 
 // EraseAt removes up to count elements starting at index and returns how many were erased.
+// Supports negative indexing where -1 refers to the last element.
+// Panics if count is negative.
 func (t *Treap[T]) EraseAt(index int, count int) (erasedCount int) {
-	if index < 0 || count < 0 {
-		panic("index and count must not be negative")
+	if count < 0 {
+		panic("count must not be negative")
+	}
+
+	sz := t.root.safeSize()
+	if sz == 0 {
+		return 0
+	}
+
+	// Support negative indexing like At()
+	if index < 0 {
+		index = sz + index
+	}
+
+	// If index is still out of bounds after normalization, return 0
+	if index < 0 || index >= sz {
+		return 0
 	}
 
 	leftRemainder, rightRemainder := t.root.split(t.condCutN(index), 0)
@@ -286,12 +311,22 @@ func (t *Treap[T]) SplitAfter(value T) (left *Treap[T], right *Treap[T]) {
 }
 
 // Cut splits the treap into the first n elements and the remainder.
+// If n is negative, cuts from the end (e.g., Cut(-2) returns all but the last 2 elements as left).
+// If the computed position is negative, everything goes to right.
 func (t *Treap[T]) Cut(n int) (left *Treap[T], right *Treap[T]) {
+	if n < 0 {
+		sz := t.root.safeSize()
+		n = sz + n
+		if n < 0 {
+			n = 0 // Everything goes to right
+		}
+	}
 	return t.split(t.condCutN(n))
 }
 
 // CountRange returns how many values fall between startValue and endValue.
 // Each bound contributes to the count only when its inclusive flag is true, so exclusive flags treat that bound as open.
+// Panics if endValue < startValue, or if startValue == endValue with non-inclusive bounds.
 func (t *Treap[T]) CountRange(startValue T, inclusiveStart bool, endValue T, inclusiveEnd bool) int {
 	if t.lessFn(endValue, startValue) {
 		panic("provided endValue must not be lower than startValue")
@@ -327,15 +362,15 @@ func (t *Treap[T]) CountRange(startValue T, inclusiveStart bool, endValue T, inc
 	return endIdx - startIdx + 1
 }
 
-// Count reports the number of occurrences of val in the treap.
-func (t *Treap[T]) Count(val T) int {
-	return t.CountRange(val, true, val, true)
+// Count reports the number of occurrences of value in the treap.
+func (t *Treap[T]) Count(value T) int {
+	return t.CountRange(value, true, value, true)
 }
 
-// Returns root element of the tree.
-// If tree is empty - nil will be returned.
-// It's not guaranteed which element it will be order-wise.
-// Useful when you need to just get any element.
+// Root returns the internal root node of the treap.
+// Returns nil if the tree is empty.
+// Note: The root node is arbitrary - prefer At(0) for first element, Leftmost() for minimum,
+// or Rightmost() for maximum.
 func (t *Treap[T]) Root() *Node[T] {
 	return t.root
 }
@@ -385,6 +420,8 @@ func (t *Treap[T]) ValuesBackwards() iter.Seq[T] {
 }
 
 // Merge joins two treaps that share the same ordering function.
+// The treaps must use equivalent lessFn comparators, otherwise the
+// resulting treap will have undefined behavior. Both treaps are consumed.
 func Merge[T any](left *Treap[T], right *Treap[T]) *Treap[T] {
 	if left == nil {
 		return right
